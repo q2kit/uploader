@@ -1,0 +1,20 @@
+{
+    "short_name": "Uploader",
+    "name": "Uploader",
+    "icons": [{
+            "src": "/static/icon192.png",
+            "type": "image/png",
+            "sizes": "192x192"
+        },
+        {
+            "src": "/static/icon512.png",
+            "type": "image/png",
+            "sizes": "512x512"
+        }
+    ],
+    "start_url": "/",
+    "display": "standalone",
+    "theme_color": "#202020",
+    "background_color": "#ffffff",
+    "prefer_related_applications": false
+}

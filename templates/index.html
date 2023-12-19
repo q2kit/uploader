@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Uploader">
+    <meta name="keywords" content="Uploader">
+    <meta name="author" content="Uploader">
+    <title>Uploader</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <link rel="manifest" href="/static/manifest.json" />
+</head>
+
+<body>
+    <div class="drag-area">
+        <div class="icon" id="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
+                <path fill="#fff"
+                    d="M537.6 226.6c4.1-10.7 6.4-22.4 6.4-34.6 0-53-43-96-96-96-19.7 0-38.1 6-53.3 16.2C367 64.2 315.3 32 256 32c-88.4 0-160 71.6-160 160 0 2.7.1 5.4.2 8.1C40.2 219.8 0 273.2 0 336c0 79.5 64.5 144 144 144h368c70.7 0 128-57.3 128-128 0-61.9-44-113.6-102.4-125.4zM393.4 288H328v112c0 8.8-7.2 16-16 16h-48c-8.8 0-16-7.2-16-16V288h-65.4c-14.3 0-21.4-17.2-11.3-27.3l105.4-105.4c6.2-6.2 16.4-6.2 22.6 0l105.4 105.4c10.1 10.1 2.9 27.3-11.3 27.3z" />
+            </svg>
+        </div>
+        <header>Drag & Drop</header>
+        <span>OR</span>
+        <button id="browse">Browse File</button>
+        <input type="file" hidden id="fileElem">
+        <div class="progress hidden">
+            <progress id="progressBar"></progress>
+        </div>
+        <div class="result hidden">
+            <div id="link"></div>
+            <button class="copy" onclick="copy()">Copy</button>
+        </div>
+    </div>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Poppins", sans-serif;
+            -webkit-user-select: none;
+            /* Safari */
+            -ms-user-select: none;
+            /* IE 10 and IE 11 */
+            user-select: none;
+            /* Standard syntax */
+        }
+
+        #icon {
+            pointer-events: none;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: #5256ad;
+            overflow: hidden;
+        }
+
+        .drag-area {
+            border: 2px dashed #fff;
+            height: 600px;
+            width: 700px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin: 2px;
+        }
+
+        @media screen and (max-width: 700px) {
+            /* .drag-area {
+            width: 100%;
+            height: 100%;
+          } */
+        }
+
+        .drag-area.active {
+            border: 2px solid #fff;
+        }
+
+        .drag-area.done {
+            border: 2px solid rgb(0, 255, 128);
+        }
+
+        .drag-area .icon {
+            font-size: 100px;
+            color: #fff;
+            width: 150px;
+            height: 150px;
+            margin-top: -50px;
+        }
+
+        .drag-area header {
+            font-size: 30px;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .drag-area span {
+            font-size: 25px;
+            font-weight: 500;
+            color: #fff;
+            margin: 10px 0 15px 0;
+        }
+
+        #browse {
+            padding: 10px 25px;
+            font-size: 20px;
+            font-weight: 500;
+            border: none;
+            outline: none;
+            background: #fff;
+            color: #5256ad;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .progress {
+            width: 60%;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #progressBar {
+            width: 100%;
+            height: 20px;
+        }
+
+        .result {
+            width: fit-content;
+            max-width: 90%;
+            border-radius: 5px;
+            margin-top: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #link {
+            color: #fff;
+            border: 1px solid #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .copy {
+            padding: 10px 10px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            outline: none;
+            background: #fff;
+            color: #5256ad;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            margin-top: 10px;
+            width: 80px;
+            margin-left: calc(50% - 40px);
+        }
+
+        img {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+
+    <script src="/static/js/qrcode.min.js"></script>
+    <script>
+        //selecting all required elements
+        const dropArea = document.querySelector(".drag-area"),
+            dragText = dropArea.querySelector("header"),
+            button = dropArea.querySelector("button"),
+            input = dropArea.querySelector("input");
+
+        var frame = document.createElement("div");
+        frame.style.width = "150px";
+        frame.style.height = "150px";
+        frame.style.border = "3px solid white";
+        var qrcode = document.createElement("div");
+        qrcode.style.width = "136px";
+        qrcode.style.height = "136px";
+        qrcode.style.marginLeft = "4px";
+        qrcode.style.marginTop = "4px";
+        var qr = new QRCode(qrcode, {
+            text: link,
+            width: 1000,
+            height: 1000,
+            colorDark: "orange",
+            colorLight: "#5256ad",
+            correctLevel: QRCode.CorrectLevel.H,
+        });
+        const showQR = (link) => {
+            qr.clear();
+            qr.makeCode(link);
+            frame.innerHTML = "";
+            frame.appendChild(qrcode);
+            icon.innerHTML = "";
+            icon.appendChild(frame);
+        }
+
+        button.onclick = () => {
+            document.getElementById('fileElem').value = null;
+            input.click();
+        }
+
+        input.addEventListener("change", function (event) {
+            dropArea.classList.add("active");
+            if (this.files[0] != undefined) {
+                up_load(this.files[0]);
+            }
+        });
+
+
+        dropArea.addEventListener("dragover", (event) => {
+            event.preventDefault(); //preventing from default behaviour
+            dropArea.classList.add("active");
+            dragText.textContent = "Release to Upload File";
+        });
+
+        //If user leave dragged File from DropArea
+        dropArea.addEventListener("dragleave", () => {
+            dropArea.classList.remove("active");
+            dragText.textContent = "Drag & Drop";
+        });
+
+        //If user drop File on DropArea
+        dropArea.addEventListener("drop", (event) => {
+            event.preventDefault(); //preventing from default behaviour
+            if (event.dataTransfer.items[0].webkitGetAsEntry().isDirectory) {
+                alert("Can't upload folder");
+                return;
+            }
+            // check Shift + Drop
+            if (event.shiftKey) {
+                up_load(event.dataTransfer.files[0], true);
+            } else {
+                up_load(event.dataTransfer.files[0]);
+            }
+        });
+
+        // get code
+        function get_code(key) {
+            const url = "/get_code/";
+            const xhr = new XMLHttpRequest();
+            const fd = new FormData();
+            fd.append('key', key);
+            xhr.open('POST', url, false);
+            xhr.send(fd);
+            return xhr.responseText;
+        }
+
+        // upload
+        function up_load(file, isShift = false) {
+            frame.innerHTML = "";
+            document.getElementsByClassName('copy')[0].innerHTML = 'Copy';
+            const url = "/";
+            const xhr = new XMLHttpRequest();
+            const fd = new FormData();
+            fd.append('file', file);
+            if (isShift) {
+                fd.append('force', 'true'); // if hold shift key, force filename to be same as original
+                let key = prompt("Key?");
+                let code = get_code(key);
+                fd.append('code', code);
+            }
+            xhr.open('POST', url, true);
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4) {
+                    dropArea.classList.add("done");
+                    document.getElementById('link').innerHTML = xhr.responseText;
+                    document.getElementsByClassName('result')[0].classList.remove('hidden');
+                    document.getElementsByClassName('progress')[0].classList.add('hidden');
+                    dragText.textContent = "Drag & Drop";
+                    showQR(xhr.responseText);
+                }
+            }
+            xhr.upload.addEventListener('progress', function (e) {
+                if (e.lengthComputable) {
+                    var percentComplete = (e.loaded / e.total);
+                    setProgress(percentComplete);
+                    document.getElementsByClassName('result')[0].classList.add('hidden');
+                    document.getElementsByClassName('progress')[0].classList.remove('hidden');
+                }
+            });
+            xhr.send(fd);
+        }
+
+        // progress
+        function setProgress(percent) {
+            document.getElementById('progressBar').value = percent;
+            if (percent == 100) {
+                done();
+            }
+        }
+
+        // done
+        function done() {
+            document.getElementById('progressBar').value = 0;
+        }
+
+        // copy
+        function copy() {
+            const str = document.getElementById('link').innerHTML;
+            const el = document.createElement('textarea');
+            el.value = str;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            document.getElementsByClassName('copy')[0].innerHTML = 'Copied';
+            setTimeout(function () { // reset copy button text after 10s
+                document.getElementsByClassName('copy')[0].innerHTML = 'Copy';
+            }, 10000);
+        }
+    </script>
+</body>
+
+</html>
