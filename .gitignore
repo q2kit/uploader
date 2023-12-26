@@ -1,3 +1,4 @@
 files/
 __pycache__/
 logs.txt
+venv/
