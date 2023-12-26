@@ -348,7 +348,7 @@
         function copy() {
             const str = document.getElementById('link').innerHTML;
             const el = document.createElement('textarea');
-            el.style.display = 'none';
+            el.style.opacity = 0;
             el.value = str;
             document.body.appendChild(el);
             el.select();
