@@ -140,7 +140,7 @@
         
         .result {
             width: fit-content;
-            max-width: 90%;
+            max-width: 96%;
             border-radius: 5px;
             margin-top: 20px;
             margin-bottom: 20px;
@@ -151,7 +151,7 @@
         #link {
             color: #fff;
             border: 1px solid #fff;
-            padding: 10px 20px;
+            padding: 10px 10px;
             border-radius: 5px;
             font-size: 13px;
             font-weight: 500;
@@ -348,6 +348,7 @@
         function copy() {
             const str = document.getElementById('link').innerHTML;
             const el = document.createElement('textarea');
+            el.style.display = 'none';
             el.value = str;
             document.body.appendChild(el);
             el.select();
