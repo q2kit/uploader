@@ -356,7 +356,9 @@
             document.body.removeChild(el);
             document.getElementsByClassName('copy')[0].innerHTML = 'Copied';
             setTimeout(function() { // reset copy button text after 10s
-                document.getElementsByClassName('copy')[0].innerHTML = 'Copy';
+                if (document.getElementsByClassName('copy')[0].innerHTML == 'Copied') {
+                    document.getElementsByClassName('copy')[0].innerHTML = 'Copy';
+                }
             }, 10000);
         }
     </script>
