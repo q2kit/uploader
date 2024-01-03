@@ -38,11 +38,18 @@ else:
 SECRET_KEY = os.getenv("SECRET_KEY")
 
 
-def write_logs(file, file_name):
+def write_logs(request, file, file_name):
     now = datetime.datetime.now()
-    logs_file = open("logs.txt", "a")
-    logs_file.write(f"{now.strftime('%Y-%m-%d %H:%M:%S')}: {file.filename} -> {file_name}\n")  # noqa
-    logs_file.close()
+    LOG_DIR = "logs/"
+    log_file = open(LOG_DIR + now.strftime("%Y-%m-%d") + ".txt", "a")
+    log_dict = {
+        "Time": now.strftime("%H:%M:%S"),
+        "ip": request.client.host,
+        "file_name": file.filename,
+        "new_file_name": file_name
+    }
+    log_file.write(" - ".join([f"{key}: {val}" for key, val in log_dict.items()]) + "\n")  # noqa
+    log_file.close()
 
 
 @app.get("/")
@@ -81,6 +88,7 @@ async def get_code(key: str = Form("")):
 
 @app.post("/")
 async def upload_file(
+    request: Request,
     file: UploadFile = File(...),
     force: bool = Form(False),
     code: str = Form("")
@@ -94,7 +102,7 @@ async def upload_file(
         file_name = str(uuid4())[-8:]
         if ext:
             file_name += f".{ext}"
-    write_logs(file, file_name)
+    write_logs(request, file, file_name)
     with open(DIR + file_name, "wb") as f:
         f.write(file.file.read())
     HOST = os.getenv("HOST")
@@ -109,13 +117,13 @@ async def docs(request: Request):
     )
 
 
-@app.get("/logs/{key}")
-async def get_logs(key: str):
+@app.get("/logs/{date}/{key}")
+async def get_logs(date: str, key: str):
     try:
         if not checkKey(key):
             return PlainTextResponse("Server Error", status_code=500)
-
-        txt = open("logs.txt", "r").read()
+        LOG_DIR = "logs/"
+        txt = open(LOG_DIR + date + ".txt", "r").read()
         return PlainTextResponse(txt)
     except Exception:
         return PlainTextResponse("Nothing")
