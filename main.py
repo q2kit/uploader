@@ -36,6 +36,7 @@ if not os.getenv("HOST"):
 else:
     SCHEMA = "https"
 SECRET_KEY = os.getenv("SECRET_KEY")
+HOST = os.getenv("HOST")
 
 
 def write_logs(request, file, file_name):
@@ -53,9 +54,18 @@ def write_logs(request, file, file_name):
 
 
 @app.get("/")
-async def root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-
+async def root(request: Request, f: str = ""):
+    file_path = f"files/{f}"
+    context = {"request": request}
+    if f and os.path.exists(file_path):
+        context.update({
+            "file_download_url": f"{SCHEMA}://{HOST}/f/{f}",
+            "file_display_url": f"{SCHEMA}://{HOST}?f={f}"
+        })
+    try:
+        return templates.TemplateResponse("index.html", context)
+    except Exception as e:
+        return PlainTextResponse(str(e))
 
 @app.get("/health")
 async def health():
@@ -64,7 +74,6 @@ async def health():
 
 @app.get("/curl/{path:path}")
 async def curl_command_str(path: str):
-    HOST = os.getenv("HOST")
     return PlainTextResponse(
         f"""curl {SCHEMA}://{HOST} -X POST -F 'file=@"{path}"' """
     )
@@ -105,8 +114,7 @@ async def upload_file(
     write_logs(request, file, file_name)
     with open(DIR + file_name, "wb") as f:
         f.write(file.file.read())
-    HOST = os.getenv("HOST")
-    return PlainTextResponse(f"{SCHEMA}://{HOST}/f/{file_name}")
+    return PlainTextResponse(f"{SCHEMA}://{HOST}?f={file_name}")
 
 
 @app.get("/docs")
